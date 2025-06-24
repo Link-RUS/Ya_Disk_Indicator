@@ -1,0 +1,8 @@
+{
+  "description": "Shows Yandex.Disk synchronization status",
+  "name": "Ya_Disk_Indicator",
+  "shell-version": ["47", "48"],
+  "url": "",
+  "uuid": "Ya_Disk_Indicator@pingvin",
+  "version": 0.1
+}

@@ -1,0 +1,70 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-06-24 10:20+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/lib/notification.js:43
+msgid "Индикатор Яндекс.Диск"
+msgstr ""
+
+#: src/lib/toggle.js:22 src/lib/toggle.js:35
+msgid "Яндекс.Диск"
+msgstr ""
+
+#: src/lib/toggle.js:38 src/lib/toggle.js:39
+msgid "Не установлен Яндекс.Диск"
+msgstr ""
+
+#: src/lib/toggle.js:45
+msgid "ЯНДЕКС.ДИСК"
+msgstr ""
+
+#: src/lib/toggle.js:57
+msgid "Открыть Яндекс.Диск в браузере"
+msgstr ""
+
+#: src/lib/toggle.js:59
+msgid "Открыть каталог Яндекс.Диска"
+msgstr ""
+
+#: src/lib/toggle.js:62
+msgid "Последние синхронизированные"
+msgstr ""
+
+#: src/lib/toggle.js:82
+msgid "Синхронизировано"
+msgstr ""
+
+#: src/lib/toggle.js:84
+msgid "Пауза"
+msgstr ""
+
+#: src/lib/toggle.js:96
+msgid "Синхронизация завершена"
+msgstr ""
+
+#: src/lib/toggle.js:102
+msgid "Использовано {used} из {total}"
+msgstr ""
+
+#: src/lib/toggle.js:103
+msgid "Доступно "
+msgstr ""
+
+#: src/lib/toggle.js:104
+msgid "Корзина "
+msgstr ""
