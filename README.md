@@ -15,22 +15,23 @@
 
 1. Клонируйте репозиторий:
 ```bash
-   git clone git@github.com:Link-RUS/Ya_Disk_Indicator.git
+git clone git@github.com:Link-RUS/Ya_Disk_Indicator.git
 ```
 
-Перейдите в директорию проекта:
+2. Перейдите в директорию проекта:
 ```bash
-    cd Ya_Disk_Indicator
+cd Ya_Disk_Indicator
 ```
 
-Выполните скрипты сборки и установки:
+3. Выполните скрипты сборки и установки:
 ```bash
-    ./build.sh
-    ./install.sh
+./build.sh
+./install.sh
 ```
 
-Перезапустите GNOME Shell (нажмите Alt + F2, введите r и нажмите Enter).
-Включите расширение через GNOME Tweaks.
+4. Перезапустите GNOME Shell (нажмите Alt + F2, введите r и нажмите Enter).
+
+5. Включите расширение через GNOME Tweaks.
 
 ## Использование
 
