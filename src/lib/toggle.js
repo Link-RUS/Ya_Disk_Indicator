@@ -44,6 +44,10 @@ export const DiskToggle = GObject.registerClass({
 
         this.menu.setHeader(this._getIcon('YandexDisk.svg'), _('ЯНДЕКС.ДИСК'));
 
+        this.toggleSyncMenuItem = new PopupImageMenuItem(_('Остановить Яндекс.Диск'), 'media-playback-stop');
+        this.toggleSyncMenuItem.connect('activate', () => this.toggleSync());
+        this.menu.addMenuItem(this.toggleSyncMenuItem);
+
         this.infoUsed = new PopupMenu.PopupMenuItem('');
         this.infoAvailable = new PopupMenu.PopupMenuItem('');
         this.infoTrash = new PopupMenu.PopupMenuItem('');
@@ -75,6 +79,22 @@ export const DiskToggle = GObject.registerClass({
         });
     }
 
+    toggleSync() {
+        const isPaused = this.status === 'Error';
+        this.yd[isPaused ? 'start' : 'stop']();
+        this.updateSyncMenuItemLabel(this.status);
+    }
+    
+    updateSyncMenuItemLabel(status) {
+        const isPaused = status === 'Error';
+        this.toggleSyncMenuItem.label.text = isPaused 
+            ? _('Запустить Яндекс.Диск') 
+            : _('Остановить Яндекс.Диск');
+        this.toggleSyncMenuItem.setIcon(isPaused 
+            ? 'media-playback-start' 
+            : 'media-playback-stop');
+    }
+
     // Обновляем состояние
     _switchToggle(status) {
     const statusMap = {
@@ -102,8 +122,10 @@ export const DiskToggle = GObject.registerClass({
     this.infoUsed.label.text = _('Использовано {used} из {total}').replace('{used}', this.yd.used).replace('{total}', this.yd.total);
     this.infoAvailable.label.text = _('Доступно ') + this.yd.available;
     this.infoTrash.label.text = _('Корзина ') + this.yd.trash;
-    }
 
+    // Обновляем текст пункта меню в зависимости от статуса
+    this.updateSyncMenuItemLabel(status);
+    }
 
     // Обновляем меню
     _createLastSyncMenu(menu) {
