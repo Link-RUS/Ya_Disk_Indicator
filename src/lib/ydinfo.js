@@ -61,7 +61,7 @@ class YDInfo extends GObject.Object {
     }
 
     stop() {
-        GLib.source_remove(this.pr);
+        //GLib.source_remove(this.pr);
         GLib.spawn_command_line_async("yandex-disk stop");
     }
 
@@ -191,6 +191,10 @@ class YDInfo extends GObject.Object {
     }
 
     AutoUpdate() {
+        if (this.pr) {
+            GLib.source_remove(this.pr);
+            this.pr = null;
+        }
         this.pr = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
             this.updateStatus();
             return true;

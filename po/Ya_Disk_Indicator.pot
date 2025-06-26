@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-24 10:20+0300\n"
+"POT-Creation-Date: 2025-06-26 20:28+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,38 +33,46 @@ msgstr ""
 msgid "ЯНДЕКС.ДИСК"
 msgstr ""
 
-#: src/lib/toggle.js:57
+#: src/lib/toggle.js:47 src/lib/toggle.js:92
+msgid "Остановить Яндекс.Диск"
+msgstr ""
+
+#: src/lib/toggle.js:61
 msgid "Открыть Яндекс.Диск в браузере"
 msgstr ""
 
-#: src/lib/toggle.js:59
+#: src/lib/toggle.js:63
 msgid "Открыть каталог Яндекс.Диска"
 msgstr ""
 
-#: src/lib/toggle.js:62
+#: src/lib/toggle.js:66
 msgid "Последние синхронизированные"
 msgstr ""
 
-#: src/lib/toggle.js:82
-msgid "Синхронизировано"
-msgstr ""
-
-#: src/lib/toggle.js:84
-msgid "Пауза"
-msgstr ""
-
-#: src/lib/toggle.js:96
-msgid "Синхронизация завершена"
+#: src/lib/toggle.js:91
+msgid "Запустить Яндекс.Диск"
 msgstr ""
 
 #: src/lib/toggle.js:102
-msgid "Использовано {used} из {total}"
-msgstr ""
-
-#: src/lib/toggle.js:103
-msgid "Доступно "
+msgid "Синхронизировано"
 msgstr ""
 
 #: src/lib/toggle.js:104
+msgid "Пауза"
+msgstr ""
+
+#: src/lib/toggle.js:116
+msgid "Синхронизация завершена"
+msgstr ""
+
+#: src/lib/toggle.js:122
+msgid "Использовано {used} из {total}"
+msgstr ""
+
+#: src/lib/toggle.js:123
+msgid "Доступно "
+msgstr ""
+
+#: src/lib/toggle.js:124
 msgid "Корзина "
 msgstr ""

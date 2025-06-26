@@ -97,34 +97,34 @@ export const DiskToggle = GObject.registerClass({
 
     // Обновляем состояние
     _switchToggle(status) {
-    const statusMap = {
-        'no internet access': { subtitle: status, checked: false },
-        'idle': { subtitle: _('Синхронизировано'), checked: true },
-        'Error': { subtitle: this.yd.error, checked: false },
-        'paused': { subtitle: _('Пауза'), checked: false },
-        'busy': { subtitle: this.yd.sync_progress, checked: true },
-        'index': { subtitle: this.yd.sync_progress, checked: true },
-    };
+        const statusMap = {
+            'no internet access': { subtitle: status, checked: false },
+            'idle': { subtitle: _('Синхронизировано'), checked: true },
+            'Error': { subtitle: this.yd.error, checked: false },
+            'paused': { subtitle: _('Пауза'), checked: false },
+            'busy': { subtitle: this.yd.sync_progress, checked: true },
+            'index': { subtitle: this.yd.sync_progress, checked: true },
+        };
 
-    if (statusMap[status]) {
-        this.status = status;
-        this.subtitle = statusMap[status].subtitle;
-        this.checked = statusMap[status].checked;
-    }
+        if (statusMap[status]) {
+            this.status = status;
+            this.subtitle = statusMap[status].subtitle;
+            this.checked = statusMap[status].checked;
+        }
 
-    if ((this.laststatus === 'busy' || this.laststatus === 'index') && status === 'idle') {
-        this.notification.newMessage(_('Синхронизация завершена'));
-        this.checked = true;
-    }
+        if ((this.laststatus === 'busy' || this.laststatus === 'index') && status === 'idle') {
+            this.notification.newMessage(_('Синхронизация завершена'));
+            this.checked = true;
+        }
 
-    this.laststatus = status;
+        this.laststatus = status;
 
-    this.infoUsed.label.text = _('Использовано {used} из {total}').replace('{used}', this.yd.used).replace('{total}', this.yd.total);
-    this.infoAvailable.label.text = _('Доступно ') + this.yd.available;
-    this.infoTrash.label.text = _('Корзина ') + this.yd.trash;
+        this.infoUsed.label.text = _('Использовано {used} из {total}').replace('{used}', this.yd.used).replace('{total}', this.yd.total);
+        this.infoAvailable.label.text = _('Доступно ') + this.yd.available;
+        this.infoTrash.label.text = _('Корзина ') + this.yd.trash;
 
-    // Обновляем текст пункта меню в зависимости от статуса
-    this.updateSyncMenuItemLabel(status);
+        // Обновляем текст пункта меню в зависимости от статуса
+        this.updateSyncMenuItemLabel(status);
     }
 
     // Обновляем меню
