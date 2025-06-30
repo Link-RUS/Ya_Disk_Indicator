@@ -11,8 +11,8 @@ import { Notification } from './notification.js';
 export const DiskToggle = GObject.registerClass({
     GTypeName: 'DiskToggle',
     Signals: {
-        'state-updated': {
-            param_types: [GObject.TYPE_INT],
+        'status-changed': {
+            param_types: [GObject.TYPE_STRING],
         },
     },
 }, class DiskToggle extends QuickMenuToggle {
@@ -125,6 +125,9 @@ export const DiskToggle = GObject.registerClass({
 
         // Обновляем текст пункта меню в зависимости от статуса
         this.updateSyncMenuItemLabel(status);
+        
+        // Эмитируем сигнал для обновления иконки индикатора
+        this.emit('status-changed', status);
     }
 
     // Обновляем меню
