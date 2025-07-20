@@ -153,7 +153,7 @@ export const DiskToggle = GObject.registerClass({
 
     // Открываем каталог
     openFolder() {
-        GLib.spawn_command_line_async('xdg-open ' + this.yd.folder);
+        GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(this.yd.folder)}`);
     }
 
     // Уничтожаем экземпляр класса

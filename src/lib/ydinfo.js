@@ -1,9 +1,12 @@
-const { GLib, GObject } = imports.gi;
+const { GLib, GObject, Gio } = imports.gi;
 
 export const YDInfo = GObject.registerClass(
     {
         Signals: {
             "status-changed": {
+                param_types: [GObject.TYPE_STRING],
+            },
+            "log-changed": {
                 param_types: [GObject.TYPE_STRING],
             },
         },
@@ -19,6 +22,8 @@ class YDInfo extends GObject.Object {
     trash = "";
     synchronized_files = [];
     folder = "";
+    logMonitor = null;
+    isAutoUpdateRunning = false;
 
     constructor() {
         super();
@@ -28,7 +33,8 @@ class YDInfo extends GObject.Object {
         if (!this.testYD()) {
             return false;
         }
-        this.AutoUpdate();
+        this.updateStatus(); // Получаем начальный статус
+        this.startLogMonitor();
         return true;
     }
 
@@ -61,13 +67,11 @@ class YDInfo extends GObject.Object {
     }
 
     stop() {
-        //GLib.source_remove(this.pr);
         GLib.spawn_command_line_async("yandex-disk stop");
     }
 
     start() {
         GLib.spawn_command_line_async("yandex-disk start");
-        this.AutoUpdate();
     }
 
     startSync() {
@@ -118,12 +122,22 @@ class YDInfo extends GObject.Object {
                 this.parseFileLine(line);
             }
         }
+        
+        // Проверяем изменение статуса
         if (this.laststatus != this.status) {
             this.laststatus = this.status;
             this.emit("status-changed", this.status);
         }
+        
+        // Всегда эмитим для активных статусов
         if (this.status === "index" || this.status === "busy") {
             this.emit("status-changed", this.status);
+        }
+
+        // Останавливаем AutoUpdate когда статус НЕ busy и НЕ index
+        if (this.status !== "busy" && this.status !== "index" && this.isAutoUpdateRunning) {
+            console.log(`Статус изменился на "${this.status}", остановка AutoUpdate`);
+            this.stopAutoUpdate();
         }
     }
 
@@ -190,21 +204,98 @@ class YDInfo extends GObject.Object {
         }
     }
 
-    AutoUpdate() {
-        if (this.pr) {
-            GLib.source_remove(this.pr);
-            this.pr = null;
+    startAutoUpdate() {
+        if (this.isAutoUpdateRunning) {
+            return; // Уже запущен
         }
+        
+        this.isAutoUpdateRunning = true;
+        console.log('Запуск AutoUpdate');
+        
         this.pr = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+            if (!this.isAutoUpdateRunning) {
+                return false; // Останавливаем таймер
+            }
             this.updateStatus();
             return true;
         });
     }
-    destroy() {
+
+    stopAutoUpdate() {
+        if (!this.isAutoUpdateRunning) {
+            return; // Уже остановлен
+        }
+        
+        this.isAutoUpdateRunning = false;
+        console.log('Остановка AutoUpdate');
+        
         if (this.pr) {
             GLib.source_remove(this.pr);
             this.pr = null;
         }
+    }
+
+    AutoUpdate() {
+        this.startAutoUpdate();
+    }
+
+    startLogMonitor() {
+        if (!this.folder) {
+            this.updateStatus();
+        }
+        
+        if (this.folder) {
+            const logPath = GLib.build_filenamev([this.folder, '.sync', 'cli.log']);
+            const logFile = Gio.File.new_for_path(logPath);
+            
+            if (logFile.query_exists(null)) {
+                try {
+                    this.logMonitor = logFile.monitor_file(Gio.FileMonitorFlags.NONE, null);
+                    this.logMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
+                        this.onLogFileChanged(file, eventType);
+                    });
+                    console.log(`Мониторинг лог-файла запущен: ${logPath}`);
+                } catch (e) {
+                    console.error(`Ошибка при запуске мониторинга лог-файла: ${e}`);
+                }
+            } else {
+                console.log(`Лог-файл не найден: ${logPath}`);
+            }
+        }
+    }
+
+    onLogFileChanged(file, eventType) {
+        if (eventType === Gio.FileMonitorEvent.CHANGED || 
+            eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT) {
+            
+            console.log('Лог-файл изменился, запуск AutoUpdate');
+            
+            // Запускаем AutoUpdate при изменении лог-файла
+            this.startAutoUpdate();
+            
+            try {
+                const [success, contents] = file.load_contents(null);
+                if (success) {
+                    const logContent = new TextDecoder().decode(contents);
+                    this.emit("log-changed", logContent);
+                }
+            } catch (e) {
+                console.error(`Ошибка при чтении лог-файла: ${e}`);
+            }
+        }
+    }
+
+    stopLogMonitor() {
+        if (this.logMonitor) {
+            this.logMonitor.cancel();
+            this.logMonitor = null;
+            console.log('Мониторинг лог-файла остановлен');
+        }
+    }
+
+    destroy() {
+        this.stopAutoUpdate();
+        this.stopLogMonitor();
     }
 },
 );
