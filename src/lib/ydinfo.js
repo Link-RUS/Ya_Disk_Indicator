@@ -33,7 +33,7 @@ class YDInfo extends GObject.Object {
         if (!this.testYD()) {
             return false;
         }
-        this.updateStatus(); // Получаем начальный статус
+        this.updateStatus();
         this.startLogMonitor();
         return true;
     }
@@ -123,18 +123,15 @@ class YDInfo extends GObject.Object {
             }
         }
         
-        // Проверяем изменение статуса
         if (this.laststatus != this.status) {
             this.laststatus = this.status;
             this.emit("status-changed", this.status);
         }
         
-        // Всегда эмитим для активных статусов
         if (this.status === "index" || this.status === "busy") {
             this.emit("status-changed", this.status);
         }
 
-        // Останавливаем AutoUpdate когда статус НЕ busy и НЕ index
         if (this.status !== "busy" && this.status !== "index" && this.isAutoUpdateRunning) {
             console.log(`Статус изменился на "${this.status}", остановка AutoUpdate`);
             this.stopAutoUpdate();
@@ -206,7 +203,7 @@ class YDInfo extends GObject.Object {
 
     startAutoUpdate() {
         if (this.isAutoUpdateRunning) {
-            return; // Уже запущен
+            return;
         }
         
         this.isAutoUpdateRunning = true;
@@ -214,7 +211,7 @@ class YDInfo extends GObject.Object {
         
         this.pr = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
             if (!this.isAutoUpdateRunning) {
-                return false; // Останавливаем таймер
+                return false;
             }
             this.updateStatus();
             return true;
@@ -223,7 +220,7 @@ class YDInfo extends GObject.Object {
 
     stopAutoUpdate() {
         if (!this.isAutoUpdateRunning) {
-            return; // Уже остановлен
+            return;
         }
         
         this.isAutoUpdateRunning = false;
@@ -254,7 +251,6 @@ class YDInfo extends GObject.Object {
                     this.logMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
                         this.onLogFileChanged(file, eventType);
                     });
-                    console.log(`Мониторинг лог-файла запущен: ${logPath}`);
                 } catch (e) {
                     console.error(`Ошибка при запуске мониторинга лог-файла: ${e}`);
                 }
@@ -268,9 +264,6 @@ class YDInfo extends GObject.Object {
         if (eventType === Gio.FileMonitorEvent.CHANGED || 
             eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT) {
             
-            console.log('Лог-файл изменился, запуск AutoUpdate');
-            
-            // Запускаем AutoUpdate при изменении лог-файла
             this.startAutoUpdate();
             
             try {
@@ -289,7 +282,6 @@ class YDInfo extends GObject.Object {
         if (this.logMonitor) {
             this.logMonitor.cancel();
             this.logMonitor = null;
-            console.log('Мониторинг лог-файла остановлен');
         }
     }
 
