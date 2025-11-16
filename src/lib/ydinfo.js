@@ -118,7 +118,7 @@ class YDInfo extends GObject.Object {
                 this.parseTrashLine(line);
             }
 
-            if (line.startsWith("\tfile: ")) {
+            if (line.startsWith("\tfile: ") || line.startsWith("\tdirectory: ")) {
                 this.parseFileLine(line);
             }
         }
@@ -207,7 +207,7 @@ class YDInfo extends GObject.Object {
         }
         
         this.isAutoUpdateRunning = true;
-        console.log('Запуск AutoUpdate');
+        //console.log('Запуск AutoUpdate');
         
         this.pr = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
             if (!this.isAutoUpdateRunning) {
@@ -224,7 +224,7 @@ class YDInfo extends GObject.Object {
         }
         
         this.isAutoUpdateRunning = false;
-        console.log('Остановка AutoUpdate');
+        //console.log('Остановка AutoUpdate');
         
         if (this.pr) {
             GLib.source_remove(this.pr);
