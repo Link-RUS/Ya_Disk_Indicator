@@ -1,293 +1,244 @@
 const { GLib, GObject, Gio } = imports.gi;
 
-export const YDInfo = GObject.registerClass(
-    {
-        Signals: {
-            "status-changed": {
-                param_types: [GObject.TYPE_STRING],
-            },
-            "log-changed": {
-                param_types: [GObject.TYPE_STRING],
-            },
-        },
-    },
-class YDInfo extends GObject.Object {
-    laststatus = "";
-    status = "";
-    error = "";
-    sync_progress = "";
-    total = "";
-    used = "";
-    available = "";
-    trash = "";
-    synchronized_files = [];
-    folder = "";
-    logMonitor = null;
-    isAutoUpdateRunning = false;
+const YD_COMMAND = 'yandex-disk';
+const STATUS_CMD = `LC_ALL=C.UTF-8 ${YD_COMMAND} status`;
+const SYNC_CMD = `${YD_COMMAND} sync`;
+const START_CMD = `${YD_COMMAND} start`;
+const STOP_CMD = `${YD_COMMAND} stop`;
 
+/**
+ * Класс для управления демоном Яндекс.Диска
+ */
+export const YDDaemon = class {
     constructor() {
-        super();
+        this._isRunning = false;
     }
 
-    init() {
-        if (!this.testYD()) {
-            return false;
-        }
-        this.updateStatus();
-        this.startLogMonitor();
-        return true;
-    }
-
-    getStatus() {
-        return this.status;
-    }
-
-    getSyncProgress() {
-        return this.sync_progress;
-    }
-
-    getTotal() {
-        return this.total;
-    }
-
-    getUsed() {
-        return this.used;
-    }
-
-    getError() {
-        return this.error;
-    }
-
-    getAvailable() {
-        return this.available;
-    }
-
-    getTrash() {
-        return this.trash;
-    }
-
-    stop() {
-        GLib.spawn_command_line_async("yandex-disk stop");
-    }
-
+    /**
+     * Запускает демон Яндекс.Диска
+     */
     start() {
-        GLib.spawn_command_line_async("yandex-disk start");
+        this._spawnAsync(START_CMD);
+        this._isRunning = true;
     }
 
-    startSync() {
-        GLib.spawn_command_line_async("yandex-disk sync");
+    /**
+     * Останавливает демон Яндекс.Диска
+     */
+    stop() {
+        this._spawnAsync(STOP_CMD);
+        this._isRunning = false;
     }
 
-    openFolder() {
-        const cmd = "xdg-open " + this.folder;
-        GLib.spawn_command_line_async(cmd);
+    /**
+     * Принудительно синхронизирует Яндекс.Диск
+     */
+    sync() {
+        this._spawnAsync(SYNC_CMD);
     }
 
-    parseStatus(status) {
-        const lines = status.split("\n");
-        this.synchronized_files = [];
-        this.sync_progress = "";
-        for (const line of lines) {
-            if (line.includes("status")) {
-                this.parseStatusLine(line);
-            }
-            if (line.includes("Error")) {
-                this.parseErrorLine(line);
-            }
-            if (this.status == "no internet access" || this.status == "Error") {
-                break;
-            }
-
-            if (line.startsWith("Sync progress: ")) {
-                this.parseSyncProgressLine(line);
-            }
-            if (line.startsWith("Path to Yandex.Disk directory: ")) {
-                this.parseFolderLine(line);
-            }
-
-            if (line.startsWith("\tTotal: ")) {
-                this.parseTotalLine(line);
-            }
-            if (line.startsWith("\tUsed: ")) {
-                this.parseUsedLine(line);
-            }
-            if (line.startsWith("\tAvailable: ")) {
-                this.parseAvailableLine(line);
-            }
-            if (line.startsWith("\tTrash size: ")) {
-                this.parseTrashLine(line);
-            }
-
-            if (line.startsWith("\tfile: ") || line.startsWith("\tdirectory: ")) {
-                this.parseFileLine(line);
-            }
-        }
-        
-        if (this.laststatus != this.status) {
-            this.laststatus = this.status;
-            this.emit("status-changed", this.status);
-        }
-        
-        if (this.status === "index" || this.status === "busy") {
-            this.emit("status-changed", this.status);
-        }
-
-        if (this.status !== "busy" && this.status !== "index" && this.isAutoUpdateRunning) {
-            console.log(`Статус изменился на "${this.status}", остановка AutoUpdate`);
-            this.stopAutoUpdate();
-        }
-    }
-
-    parseStatusLine(line) {
-        this.status = line.split(": ")[1].trim();
-    }
-
-    parseErrorLine(line) {
-        this.status = line.split(": ")[0].trim();
-        this.error = line.split(": ")[1].trim();
-    }
-
-    parseSyncProgressLine(line) {
-        this.sync_progress = line.split(": ")[1].trim();
-    }
-
-    parseFolderLine(line) {
-        this.folder = line.split(": ")[1].trim().slice(1, -1);
-    }
-
-    parseTotalLine(line) {
-        this.total = line.split(": ")[1].trim();
-    }
-
-    parseUsedLine(line) {
-        this.used = line.split(": ")[1].trim();
-    }
-
-    parseAvailableLine(line) {
-        this.available = line.split(": ")[1].trim();
-    }
-
-    parseTrashLine(line) {
-        this.trash = line.split(": ")[1].trim();
-    }
-
-    parseFileLine(line) {
-        const filePath = line.match(/'([^']+)'/)[1];
-        this.synchronized_files.push(filePath);
-    }
-
-    testYD() {
-        let [success, out] = GLib.spawn_command_line_sync('sh -c "command -v yandex-disk"');
-        if (success) {
-            let status = new TextDecoder().decode(out);
-            if (status.includes("yandex-disk")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    updateStatus() {
+    /**
+     * Асинхронно выполняет команду
+     * @param {string} args - Команда для выполнения
+     */
+    _spawnAsync(args) {
         try {
-            let [success, out] = GLib.spawn_command_line_sync(
-                'sh -c "LC_ALL=C.UTF-8 yandex-disk status"',
-            );
-            if (success) {
-                let status = new TextDecoder().decode(out);
-                this.parseStatus(status);
+            const success = GLib.spawn_command_line_async(args);
+            if (!success) {
+                console.error('Failed to execute command:', args);
             }
         } catch (e) {
-            console.error(e);
+            console.error('Exception while executing command:', args, e);
         }
     }
 
-    startAutoUpdate() {
-        if (this.isAutoUpdateRunning) {
-            return;
-        }
-        
-        this.isAutoUpdateRunning = true;
-        //console.log('Запуск AutoUpdate');
-        
-        this.pr = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
-            if (!this.isAutoUpdateRunning) {
-                return false;
+    /**
+     * Проверяет, запущен ли демон
+     * @returns {boolean} - true если демон запущен, иначе false
+     */
+    isRunning() {
+        return this._isRunning;
+    }
+};
+
+/**
+ * Класс для парсинга статуса Яндекс.Диска
+ */
+export const YDStatusParser = class {
+    /**
+     * Парсит вывод статуса Яндекс.Диска
+     * @param {string} statusOutput - Вывод команды статуса
+     * @returns {Object} - Объект со статусом и информацией о диске
+     */
+    parse(statusOutput) {
+        const result = {
+            status: '',
+            error: '',
+            sync_progress: '',
+            folder: '',
+            total: '',
+            used: '',
+            available: '',
+            trash: '',
+            synchronized_files: [],
+        };
+
+        const lines = statusOutput.split('\n');
+
+        for (const line of lines) {
+            if (line.includes('status:')) {
+                result.status = line.split(':')[1].trim();
+            } else if (line.includes('Error:')) {
+                result.status = 'Error';
+                result.error = line.split(':')[1].trim();
+            } else if (line.startsWith('Sync progress:')) {
+                result.sync_progress = line.split(':')[1].trim();
+            } else if (line.startsWith('Path to Yandex.Disk directory:')) {
+                result.folder = line.split(':')[1].trim().slice(1, -1);
+            } else if (line.startsWith('\tTotal:')) {
+                result.total = line.split(':')[1].trim();
+            } else if (line.startsWith('\tUsed:')) {
+                result.used = line.split(':')[1].trim();
+            } else if (line.startsWith('\tAvailable:')) {
+                result.available = line.split(':')[1].trim();
+            } else if (line.startsWith('\tTrash size:')) {
+                result.trash = line.split(':')[1].trim();
+            } else if (line.match(/^(?:\t)*(?:file|directory): '(.+)'$/)) {
+                const match = line.match(/'([^']+)'/);
+                if (match) result.synchronized_files.push(match[1]);
             }
-            this.updateStatus();
-            return true;
-        });
+        }
+
+        return result;
+    }
+};
+
+/**
+ * Класс для мониторинга статуса Яндекс.Диска
+ */
+export const YDStatusMonitor = class {
+    /**
+     * Конструктор монитора статуса
+     * @param {YDStatusParser} parser - Парсер статуса
+     * @param {string} logPath - Путь к лог-файлу
+     */
+    constructor(parser, logPath) {
+        this._parser = parser;
+        this._logPath = logPath;
+        this._monitor = null;
+        this._timeoutId = 0;
+        this._onStatusChanged = null;
+        this._currentPollInterval = 60; // по умолчанию — раз в минуту
     }
 
-    stopAutoUpdate() {
-        if (!this.isAutoUpdateRunning) {
+    /**
+     * Подключает обработчик изменения статуса
+     * @param {Function} callback - Функция обратного вызова
+     */
+    connectStatusChanged(callback) {
+        this._onStatusChanged = callback;
+    }
+
+    /**
+     * Запускает мониторинг статуса
+     */
+    start() {
+        this._startLogMonitoring();
+        this._pollStatus(); // начальный опрос
+    }
+
+    /**
+     * Начинает мониторинг лог-файла
+     * @private
+     */
+    _startLogMonitoring() {
+        const file = Gio.File.new_for_path(this._logPath);
+        if (!file.query_exists(null)) {
+            console.warn('Log file not found:', this._logPath);
             return;
         }
-        
-        this.isAutoUpdateRunning = false;
-        //console.log('Остановка AutoUpdate');
-        
-        if (this.pr) {
-            GLib.source_remove(this.pr);
-            this.pr = null;
+
+        try {
+            this._monitor = file.monitor_file(Gio.FileMonitorFlags.NONE, null);
+            this._monitor.connect('changed', (m, f, other, eventType) => {
+                // ❌ Не запускаем _pollStatus, если и так опрашиваем каждую секунду
+                if (this._currentPollInterval > 1) {
+                    if (
+                        eventType === Gio.FileMonitorEvent.CHANGED ||
+                        eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT
+                    ) {
+                        this._pollStatus();
+                    }
+                }
+            });
+        } catch (e) {
+            console.error('Failed to monitor log file:', e);
         }
     }
 
-    AutoUpdate() {
-        this.startAutoUpdate();
-    }
-
-    startLogMonitor() {
-        if (!this.folder) {
-            this.updateStatus();
+    /**
+     * Опрашивает статус Яндекс.Диска
+     * @private
+     */
+    _pollStatus() {
+        if (this._timeoutId) {
+            GLib.source_remove(this._timeoutId);
+            this._timeoutId = 0;
         }
-        
-        if (this.folder) {
-            const logPath = GLib.build_filenamev([this.folder, '.sync', 'cli.log']);
-            const logFile = Gio.File.new_for_path(logPath);
-            
-            if (logFile.query_exists(null)) {
-                try {
-                    this.logMonitor = logFile.monitor_file(Gio.FileMonitorFlags.NONE, null);
-                    this.logMonitor.connect('changed', (monitor, file, otherFile, eventType) => {
-                        this.onLogFileChanged(file, eventType);
-                    });
-                } catch (e) {
-                    console.error(`Ошибка при запуске мониторинга лог-файла: ${e}`);
+
+        try {
+            const [success, stdout, stderr, exitCode] = GLib.spawn_command_line_sync(
+                `sh -c "${STATUS_CMD}"`
+            );
+
+            if (success && exitCode === 0) {
+                const output = new TextDecoder().decode(stdout);
+                const status = this._parser.parse(output);
+
+                // Сохраняем путь к папке, если ещё не знаем
+                if (!this._logPath && status.folder) {
+                    this._logPath = GLib.build_filenamev([status.folder, '.sync', 'cli.log']);
+                    this._startLogMonitoring(); // перезапускаем монитор с новым путём
+                }
+
+                // Определяем интервал
+                const isBusy = status.status === 'busy' || status.status === 'index';
+                this._currentPollInterval = isBusy ? 1 : 60;
+
+                if (this._onStatusChanged) {
+                    this._onStatusChanged(status);
                 }
             } else {
-                console.log(`Лог-файл не найден: ${logPath}`);
+                console.error('Failed to get Yandex.Disk status:', new TextDecoder().decode(stderr));
+                this._currentPollInterval = 60; // fallback
             }
+        } catch (e) {
+            console.error('Exception while getting Yandex.Disk status:', e);
+            this._currentPollInterval = 60; // fallback
         }
-    }
 
-    onLogFileChanged(file, eventType) {
-        if (eventType === Gio.FileMonitorEvent.CHANGED || 
-            eventType === Gio.FileMonitorEvent.CHANGES_DONE_HINT) {
-            
-            this.startAutoUpdate();
-            
-            try {
-                const [success, contents] = file.load_contents(null);
-                if (success) {
-                    const logContent = new TextDecoder().decode(contents);
-                    this.emit("log-changed", logContent);
-                }
-            } catch (e) {
-                console.error(`Ошибка при чтении лог-файла: ${e}`);
+        // 🔁 Устанавливаем следующий таймер с актуальным интервалом
+        this._timeoutId = GLib.timeout_add_seconds(
+            GLib.PRIORITY_DEFAULT,
+            this._currentPollInterval,
+            () => {
+                this._pollStatus();
+                return false; // будет установлен заново
             }
-        }
+        );
     }
 
-    stopLogMonitor() {
-        if (this.logMonitor) {
-            this.logMonitor.cancel();
-            this.logMonitor = null;
+    /**
+     * Останавливает мониторинг статуса
+     */
+    stop() {
+        if (this._monitor) {
+            this._monitor.cancel();
+            this._monitor = null;
+        }
+        if (this._timeoutId) {
+            GLib.source_remove(this._timeoutId);
+            this._timeoutId = 0;
         }
     }
-
-    destroy() {
-        this.stopAutoUpdate();
-        this.stopLogMonitor();
-    }
-},
-);
+};

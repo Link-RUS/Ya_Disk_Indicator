@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-26 20:28+0300\n"
+"POT-Creation-Date: 2025-12-31 00:26+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,62 +17,94 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/lib/notification.js:43
+#: src/lib/notification.js:35
 msgid "Индикатор Яндекс.Диск"
 msgstr ""
 
-#: src/lib/toggle.js:22 src/lib/toggle.js:35
+#: src/lib/toggle.js:26 src/lib/toggle.js:40
 msgid "Яндекс.Диск"
 msgstr ""
 
-#: src/lib/toggle.js:38 src/lib/toggle.js:39
+#: src/lib/toggle.js:45 src/lib/toggle.js:46
 msgid "Не установлен Яндекс.Диск"
 msgstr ""
 
-#: src/lib/toggle.js:45
+#: src/lib/toggle.js:50
 msgid "ЯНДЕКС.ДИСК"
 msgstr ""
 
-#: src/lib/toggle.js:47 src/lib/toggle.js:92
+#: src/lib/toggle.js:53 src/lib/toggle.js:170
 msgid "Остановить Яндекс.Диск"
 msgstr ""
 
-#: src/lib/toggle.js:61
+#: src/lib/toggle.js:64
 msgid "Открыть Яндекс.Диск в браузере"
 msgstr ""
 
-#: src/lib/toggle.js:63
+#: src/lib/toggle.js:70
 msgid "Открыть каталог Яндекс.Диска"
 msgstr ""
 
-#: src/lib/toggle.js:66
+#: src/lib/toggle.js:75
 msgid "Последние синхронизированные"
 msgstr ""
 
-#: src/lib/toggle.js:91
-msgid "Запустить Яндекс.Диск"
-msgstr ""
-
-#: src/lib/toggle.js:102
-msgid "Синхронизировано"
-msgstr ""
-
-#: src/lib/toggle.js:104
-msgid "Пауза"
-msgstr ""
-
-#: src/lib/toggle.js:116
-msgid "Синхронизация завершена"
-msgstr ""
-
-#: src/lib/toggle.js:122
+#: src/lib/toggle.js:139
 msgid "Использовано {used} из {total}"
 msgstr ""
 
-#: src/lib/toggle.js:123
+#: src/lib/toggle.js:142
 msgid "Доступно "
 msgstr ""
 
-#: src/lib/toggle.js:124
+#: src/lib/toggle.js:143
 msgid "Корзина "
+msgstr ""
+
+#: src/lib/toggle.js:151
+msgid "Синхронизация завершена"
+msgstr ""
+
+#: src/lib/toggle.js:158
+msgid "Синхронизировано"
+msgstr ""
+
+#: src/lib/toggle.js:159
+msgid "Нет интернета"
+msgstr ""
+
+#: src/lib/toggle.js:160
+msgid "Ошибка"
+msgstr ""
+
+#: src/lib/toggle.js:161
+msgid "Пауза"
+msgstr ""
+
+#: src/lib/toggle.js:171
+msgid "Запустить Яндекс.Диск"
+msgstr ""
+
+#: src/lib/toggle.js:183
+msgid "Ошибка при управлении Яндекс.Диском"
+msgstr ""
+
+#: src/lib/toggle.js:192
+msgid "Нет синхронизированных файлов"
+msgstr ""
+
+#: src/lib/toggle.js:213
+msgid "Не удалось открыть файл"
+msgstr ""
+
+#: src/lib/toggle.js:242
+msgid "Не удалось открыть Яндекс.Диск в браузере"
+msgstr ""
+
+#: src/lib/toggle.js:253
+msgid "Не удалось открыть каталог Яндекс.Диска"
+msgstr ""
+
+#: src/lib/toggle.js:257
+msgid "Каталог Яндекс.Диска не найден"
 msgstr ""

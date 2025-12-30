@@ -1,9 +1,14 @@
+# English translations for PACKAGE package.
+# Copyright (C) 2025 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#  <dmitriy@pingvin>, 2025.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-26 20:28+0300\n"
-"PO-Revision-Date: 2025-06-24 07:42+0300\n"
+"POT-Creation-Date: 2025-12-31 00:26+0300\n"
+"PO-Revision-Date: 2025-12-31 00:26+0300\n"
 "Last-Translator:  <dmitriy@pingvin>\n"
 "Language-Team: English\n"
 "Language: en_US\n"
@@ -12,64 +17,94 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/lib/notification.js:43
+#: src/lib/notification.js:35
 msgid "Индикатор Яндекс.Диск"
 msgstr "Yandex.Disk Indicator"
 
-#: src/lib/toggle.js:22 src/lib/toggle.js:35
+#: src/lib/toggle.js:26 src/lib/toggle.js:40
 msgid "Яндекс.Диск"
 msgstr "Yandex.Disk"
 
-#: src/lib/toggle.js:38 src/lib/toggle.js:39
+#: src/lib/toggle.js:45 src/lib/toggle.js:46
 msgid "Не установлен Яндекс.Диск"
 msgstr "Yandex.Disk is not installed"
 
-#: src/lib/toggle.js:45
+#: src/lib/toggle.js:50
 msgid "ЯНДЕКС.ДИСК"
 msgstr "YANDEX.DISK"
 
-#: src/lib/toggle.js:47 src/lib/toggle.js:92
-#, fuzzy
+#: src/lib/toggle.js:53 src/lib/toggle.js:170
 msgid "Остановить Яндекс.Диск"
 msgstr "Stop Yandex.Disk"
 
-#: src/lib/toggle.js:61
+#: src/lib/toggle.js:64
 msgid "Открыть Яндекс.Диск в браузере"
 msgstr "Open Yandex.Disk in browser"
 
-#: src/lib/toggle.js:63
+#: src/lib/toggle.js:70
 msgid "Открыть каталог Яндекс.Диска"
-msgstr "Open Yandex.Disk directory"
+msgstr "Open Yandex.Disk folder"
 
-#: src/lib/toggle.js:66
+#: src/lib/toggle.js:75
 msgid "Последние синхронизированные"
-msgstr "Recently synced"
+msgstr "Recently synchronized"
 
-#: src/lib/toggle.js:91
-#, fuzzy
-msgid "Запустить Яндекс.Диск"
-msgstr "Start Yandex.Disk"
-
-#: src/lib/toggle.js:102
-msgid "Синхронизировано"
-msgstr "Synced"
-
-#: src/lib/toggle.js:104
-msgid "Пауза"
-msgstr "Paused"
-
-#: src/lib/toggle.js:116
-msgid "Синхронизация завершена"
-msgstr "Sync completed"
-
-#: src/lib/toggle.js:122
+#: src/lib/toggle.js:139
 msgid "Использовано {used} из {total}"
-msgstr "Used {used} out of {total}"
+msgstr "Used {used} of {total}"
 
-#: src/lib/toggle.js:123
+#: src/lib/toggle.js:142
 msgid "Доступно "
 msgstr "Available "
 
-#: src/lib/toggle.js:124
+#: src/lib/toggle.js:143
 msgid "Корзина "
 msgstr "Trash "
+
+#: src/lib/toggle.js:151
+msgid "Синхронизация завершена"
+msgstr "Synchronization completed"
+
+#: src/lib/toggle.js:158
+msgid "Синхронизировано"
+msgstr "Synchronized"
+
+#: src/lib/toggle.js:159
+msgid "Нет интернета"
+msgstr "No internet"
+
+#: src/lib/toggle.js:160
+msgid "Ошибка"
+msgstr "Error"
+
+#: src/lib/toggle.js:161
+msgid "Пауза"
+msgstr "Pause"
+
+#: src/lib/toggle.js:171
+msgid "Запустить Яндекс.Диск"
+msgstr "Start Yandex.Disk"
+
+#: src/lib/toggle.js:183
+msgid "Ошибка при управлении Яндекс.Диском"
+msgstr "Error managing Yandex.Disk"
+
+#: src/lib/toggle.js:192
+msgid "Нет синхронизированных файлов"
+msgstr "No synchronized files"
+
+#: src/lib/toggle.js:213
+msgid "Не удалось открыть файл"
+msgstr "Failed to open file"
+
+#: src/lib/toggle.js:242
+msgid "Не удалось открыть Яндекс.Диск в браузере"
+msgstr "Failed to open Yandex.Disk in browser"
+
+#: src/lib/toggle.js:253
+msgid "Не удалось открыть каталог Яндекс.Диска"
+msgstr "Failed to open Yandex.Disk folder"
+
+#: src/lib/toggle.js:257
+msgid "Каталог Яндекс.Диска не найден"
+msgstr "Yandex.Disk folder not found"

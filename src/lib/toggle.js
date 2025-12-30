@@ -5,18 +5,22 @@ import { QuickMenuToggle } from 'resource:///org/gnome/shell/ui/quickSettings.js
 import { PopupImageMenuItem, PopupSubMenuMenuItem } from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { YDInfo } from './ydinfo.js';
 import { Notification } from './notification.js';
 
+import { YDDaemon, YDStatusParser, YDStatusMonitor } from './ydinfo.js';
+
+/**
+ * Класс переключателя Яндекс.Диска для панели быстрых настроек GNOME Shell
+ * @extends QuickMenuToggle
+ */
 export const DiskToggle = GObject.registerClass({
     GTypeName: 'DiskToggle',
-    Signals: {
-        'status-changed': {
-            param_types: [GObject.TYPE_STRING],
-        },
-    },
+    Signals: { 'status-changed': { param_types: [GObject.TYPE_STRING] } },
 }, class DiskToggle extends QuickMenuToggle {
-        
+    /**
+     * Инициализация переключателя Яндекс.Диска
+     * @param {Extension} extension - Объект расширения
+     */
     _init(extension) {
         super._init({
             title: _('Яндекс.Диск'),
@@ -26,152 +30,241 @@ export const DiskToggle = GObject.registerClass({
         });
 
         this.extension = extension;
-        this.status = '';
-        this.laststatus = '';
+        this._status = '';
+        this._lastStatus = '';
 
-        this.yd = new YDInfo();
-        const result = this.yd.init();
+        this._daemon = new YDDaemon();
+        this._parser = new YDStatusParser();
+        this._monitor = null;
 
         this.notification = new Notification(_('Яндекс.Диск'), extension);
+        this.gicon = this._getIcon('YandexDisk.svg');
 
-        if (!result) {
+        // Проверка установки
+        if (!this._isYDInstalled()) {
             this.subtitle = _('Не установлен Яндекс.Диск');
             this.notification.newMessage(_('Не установлен Яндекс.Диск'));
             return;
         }
 
-        this.gicon = this._getIcon('YandexDisk.svg');
+        this.menu.setHeader(this.gicon, _('ЯНДЕКС.ДИСК'));
 
-        this.menu.setHeader(this._getIcon('YandexDisk.svg'), _('ЯНДЕКС.ДИСК'));
-
-        this.toggleSyncMenuItem = new PopupImageMenuItem(_('Остановить Яндекс.Диск'), 'media-playback-stop');
-        this.toggleSyncMenuItem.connect('activate', () => this.toggleSync());
+        this.toggleSyncMenuItem = new PopupImageMenuItem(
+            _('Остановить Яндекс.Диск'),
+            'media-playback-stop'
+        );
+        this.toggleSyncMenuItem.connect('activate', () => this._toggleSync());
         this.menu.addMenuItem(this.toggleSyncMenuItem);
 
-        this.infoUsed = new PopupMenu.PopupMenuItem('');
-        this.infoAvailable = new PopupMenu.PopupMenuItem('');
-        this.infoTrash = new PopupMenu.PopupMenuItem('');
-        this.infoUsed.setSensitive(false);
-        this.infoAvailable.setSensitive(false);
-        this.infoTrash.setSensitive(false);
-        this.menu.addMenuItem(this.infoUsed);
-        this.menu.addMenuItem(this.infoAvailable);
-        this.menu.addMenuItem(this.infoTrash);
+        this.infoUsed = this._addInfoItem('');
+        this.infoAvailable = this._addInfoItem('');
+        this.infoTrash = this._addInfoItem('');
 
-        this.openBrowserMenuItem = new PopupImageMenuItem(_('Открыть Яндекс.Диск в браузере'), 'folder-remote-symbolic');
+        this.openBrowserMenuItem = new PopupImageMenuItem(
+            _('Открыть Яндекс.Диск в браузере'),
+            'folder-remote-symbolic'
+        );
         this.openBrowserMenuItem.connect('activate', () => this.openBrowser());
-        this.openFolderMenuItem = new PopupImageMenuItem(_('Открыть каталог Яндекс.Диска'), 'folder');
+
+        this.openFolderMenuItem = new PopupImageMenuItem(
+            _('Открыть каталог Яндекс.Диска'),
+            'folder'
+        );
         this.openFolderMenuItem.connect('activate', () => this.openFolder());
 
         this.menuLastSync = new PopupSubMenuMenuItem(_('Последние синхронизированные'), true);
-
         this.menu.addMenuItem(this.openBrowserMenuItem);
         this.menu.addMenuItem(this.openFolderMenuItem);
         this.menu.addMenuItem(this.menuLastSync);
-        this._createLastSyncMenu(this.menuLastSync.menu);
-        
-        this.subtitle = this.yd.status;
-        this._switchToggle(this.yd.status);
 
-        this._statusChangedId = this.yd.connect('status-changed', (_, status) => {
-            this._createLastSyncMenu(this.menuLastSync.menu);
-            this._switchToggle(status);
+        // Запуск мониторинга
+        this._startMonitoring();
+    }
+
+    /**
+     * Добавляет информационный элемент в меню
+     * @param {string} text - Текст для отображения
+     * @returns {PopupMenu.PopupMenuItem} Созданный элемент меню
+     */
+    _addInfoItem(text) {
+        const item = new PopupMenu.PopupMenuItem(text);
+        item.setSensitive(false);
+        this.menu.addMenuItem(item);
+        return item;
+    }
+
+    _isYDInstalled() {
+        try {
+            const [success, stdout, stderr, exitCode] = GLib.spawn_command_line_sync('sh -c "command -v yandex-disk"');
+            if (!success || exitCode !== 0) {
+                console.warn('Yandex.Disk is not installed or not in PATH');
+                return false;
+            }
+            return true;
+        } catch (e) {
+            console.error('Error checking Yandex.Disk installation:', e);
+            return false;
+        }
+    }
+
+    /**
+     * Запускает мониторинг статуса Яндекс.Диска
+     * @private
+     */
+    _startMonitoring() {
+        this._monitor = new YDStatusMonitor(this._parser, '');
+        this._monitor.connectStatusChanged((status) => {
+            if (!this._monitor._logPath && status.folder) {
+                this._monitor._logPath = GLib.build_filenamev([status.folder, '.sync', 'cli.log']);
+            }
+            this._updateUI(status);
         });
+        this._monitor.start();
     }
 
-    toggleSync() {
-        const isPaused = this.status === 'Error';
-        this.yd[isPaused ? 'start' : 'stop']();
-        this.updateSyncMenuItemLabel(this.status);
-    }
-    
-    updateSyncMenuItemLabel(status) {
-        const isPaused = status === 'Error';
-        this.toggleSyncMenuItem.label.text = isPaused 
-            ? _('Запустить Яндекс.Диск') 
-            : _('Остановить Яндекс.Диск');
-        this.toggleSyncMenuItem.setIcon(isPaused 
-            ? 'media-playback-start' 
-            : 'media-playback-stop');
-    }
+    /**
+     * Обновляет пользовательский интерфейс в соответствии со статусом
+     * @param {Object} status - Объект статуса Яндекс.Диска
+     * @private
+     */
+    _updateUI(status) {
+        const { status: current, error, sync_progress, total, used, available, trash, synchronized_files } = status;
 
-    // Обновляем состояние
-    _switchToggle(status) {
-        const statusMap = {
-            'no internet access': { subtitle: status, checked: false },
-            'idle': { subtitle: _('Синхронизировано'), checked: true },
-            'Error': { subtitle: this.yd.error, checked: false },
-            'paused': { subtitle: _('Пауза'), checked: false },
-            'busy': { subtitle: this.yd.sync_progress, checked: true },
-            'index': { subtitle: this.yd.sync_progress, checked: true },
-        };
+        this._status = current;
 
-        if (statusMap[status]) {
-            this.status = status;
-            this.subtitle = statusMap[status].subtitle;
-            this.checked = statusMap[status].checked;
-        }
+        const isRunning = current !== 'Error' && current !== 'no internet access' && current !== 'paused';
+        this.checked = isRunning;
+        this.subtitle = this._getSubtitle(current, error, sync_progress);
 
-        if ((this.laststatus === 'busy' || this.laststatus === 'index') && status === 'idle') {
+        this.infoUsed.label.text = _('Использовано {used} из {total}')
+            .replace('{used}', used)
+            .replace('{total}', total);
+        this.infoAvailable.label.text = _('Доступно ') + available;
+        this.infoTrash.label.text = _('Корзина ') + trash;
+
+        this._updateSyncMenuItem(isRunning);
+        this._createLastSyncMenu(synchronized_files);
+
+        this.emit('status-changed', current);
+
+        if ((this._lastStatus === 'busy' || this._lastStatus === 'index') && current === 'idle') {
             this.notification.newMessage(_('Синхронизация завершена'));
-            this.checked = true;
         }
-
-        this.laststatus = status;
-
-        this.infoUsed.label.text = _('Использовано {used} из {total}').replace('{used}', this.yd.used).replace('{total}', this.yd.total);
-        this.infoAvailable.label.text = _('Доступно ') + this.yd.available;
-        this.infoTrash.label.text = _('Корзина ') + this.yd.trash;
-
-        // Обновляем текст пункта меню в зависимости от статуса
-        this.updateSyncMenuItemLabel(status);
-        
-        // Эмитируем сигнал для обновления иконки индикатора
-        this.emit('status-changed', status);
+        this._lastStatus = this._status;
     }
 
-    // Обновляем меню
-    _createLastSyncMenu(menu) {
-        menu.removeAll();
-        for (const file of this.yd.synchronized_files) {
+    _getSubtitle(status, error, progress) {
+        const map = {
+            idle: _('Синхронизировано'),
+            'no internet access': _('Нет интернета'),
+            Error: error || _('Ошибка'),
+            paused: _('Пауза'),
+            busy: progress,
+            index: progress,
+        };
+        return map[status] || status;
+    }
+
+    _updateSyncMenuItem(isRunning) {
+        this.toggleSyncMenuItem.label.text = isRunning
+            ? _('Остановить Яндекс.Диск')
+            : _('Запустить Яндекс.Диск');
+        this.toggleSyncMenuItem.setIcon(isRunning
+            ? 'media-playback-stop'
+            : 'media-playback-start');
+    }
+
+    _toggleSync() {
+        const isRunning = this.checked;
+        try {
+            this._daemon[isRunning ? 'stop' : 'start']();
+        } catch (e) {
+            console.error(`Failed to ${isRunning ? 'stop' : 'start'} Yandex.Disk:`, e);
+            this.notification.newMessage(_('Ошибка при управлении Яндекс.Диском'));
+        }
+        // UI обновится по сигналу из мониторинга
+    }
+
+    _createLastSyncMenu(files) {
+        this.menuLastSync.menu.removeAll();
+        
+        if (!files || files.length === 0) {
+            const emptyItem = new PopupMenu.PopupMenuItem(_('Нет синхронизированных файлов'));
+            emptyItem.setSensitive(false);
+            this.menuLastSync.menu.addMenuItem(emptyItem);
+            return;
+        }
+        
+        for (const file of files) {
             const item = new PopupImageMenuItem(file, 'document-symbolic');
-            const path = this.yd.folder + '/' + file;
-            item.connect('activate', () => GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(path)}`));
-            menu.addMenuItem(item);
+            const basePath = this._monitor?._logPath?.replace('/.sync/cli.log', '');
+            
+            if (!basePath) {
+                console.warn('Base path is not available for opening files');
+                continue;
+            }
+            
+            const path = basePath + '/' + file;
+            item.connect('activate', () => {
+                try {
+                    GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(path)}`);
+                } catch (e) {
+                    console.error(`Failed to open file ${path}:`, e);
+                    this.notification.newMessage(_('Не удалось открыть файл'));
+                }
+            });
+            this.menuLastSync.menu.addMenuItem(item);
         }
     }
 
     // Получаем иконку
     _getIcon(iconName) {
-        return Gio.FileIcon.new(Gio.File.new_for_path(this.extension.path + '/icons/' + iconName));
-    }
-
-    // Открываем Яндекс.Диск
-    openBrowser() {
-        GLib.spawn_command_line_async('xdg-open https://disk.yandex.ru');
-    }
-
-    // Открываем каталог
-    openFolder() {
-        GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(this.yd.folder)}`);
-    }
-
-    // Уничтожаем экземпляр класса
-    destroy() {   
-        // Отключаем сигнал 'status-changed'
-        if (this._statusChangedId) {
-            this.yd.disconnect(this._statusChangedId);
-            this._statusChangedId = null;
+        const iconPath = `${this.extension.path}/icons/${iconName}`;
+        const file = Gio.File.new_for_path(iconPath);
+        
+        // Проверяем существование файла иконки
+        if (!file.query_exists(null)) {
+            console.warn(`Icon file not found: ${iconPath}`);
+            // Возвращаем иконку по умолчанию если файл не найден
+            return Gio.FileIcon.new(Gio.File.new_for_path(
+                `${this.extension.path}/icons/YandexDisk.svg`
+            ));
         }
+        
+        return Gio.FileIcon.new(file);
+    }
 
-        // Уничтожаем экземпляр YDInfo
-        this.yd.destroy();
-        this.yd = null;
+    openBrowser() {
+        try {
+            GLib.spawn_command_line_async('xdg-open https://disk.yandex.ru');
+        } catch (e) {
+            console.error('Failed to open Yandex.Disk in browser:', e);
+            this.notification.newMessage(_('Не удалось открыть Яндекс.Диск в браузере'));
+        }
+    }
 
-        // Явно удаляем элементы меню
-        this.menu.removeAll();
+    openFolder() {
+        const folder = this._monitor?._logPath?.replace('/.sync/cli.log', '');
+        if (folder) {
+            try {
+                GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(folder)}`);
+            } catch (e) {
+                console.error(`Failed to open folder ${folder}:`, e);
+                this.notification.newMessage(_('Не удалось открыть каталог Яндекс.Диска'));
+            }
+        } else {
+            console.warn('Folder path is not available');
+            this.notification.newMessage(_('Каталог Яндекс.Диска не найден'));
+        }
+    }
 
-        // Вызываем destroy() родительского класса
+    /**
+     * Освобождает ресурсы при уничтожении объекта
+     */
+    destroy() {
+        if (this._monitor) {
+            this._monitor.stop();
+        }
         super.destroy();
     }
 });
