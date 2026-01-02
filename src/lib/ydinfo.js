@@ -186,12 +186,12 @@ export const YDStatusMonitor = class {
             this._timeoutId = 0;
         }
 
-        try {
+        try {         
             const [success, stdout, stderr, exitCode] = GLib.spawn_command_line_sync(
                 `sh -c "${STATUS_CMD}"`
             );
 
-            if (success && exitCode === 0) {
+            if (success) {
                 const output = new TextDecoder().decode(stdout);
                 const status = this._parser.parse(output);
 
