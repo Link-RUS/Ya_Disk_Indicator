@@ -103,9 +103,12 @@ export const YDStatusParser = class {
                 result.available = line.split(':')[1].trim();
             } else if (line.startsWith('\tTrash size:')) {
                 result.trash = line.split(':')[1].trim();
-            } else if (line.match(/^(?:\t)*(?:file|directory): '(.+)'$/)) {
+            } else if (line.match(/^(?:\t)*file: '(.+)'$/)) {
                 const match = line.match(/'([^']+)'/);
-                if (match) result.synchronized_files.push(match[1]);
+                if (match) result.synchronized_files.push({name: match[1], type: 'file'});
+            } else if (line.match(/^(?:\t)*directory: '(.+)'$/)) {
+                const match = line.match(/'([^']+)'/);
+                if (match) result.synchronized_files.push({name: match[1], type: 'directory'});
             }
         }
 

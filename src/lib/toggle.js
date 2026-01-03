@@ -196,7 +196,8 @@ export const DiskToggle = GObject.registerClass({
         }
         
         for (const file of files) {
-            const item = new PopupImageMenuItem(file, 'document-symbolic');
+            const icon = file.type === 'directory' ? 'folder' : 'document-symbolic';
+            const item = new PopupImageMenuItem(file.name, icon);
             const basePath = this._monitor?._logPath?.replace('/.sync/cli.log', '');
             
             if (!basePath) {
@@ -204,7 +205,7 @@ export const DiskToggle = GObject.registerClass({
                 continue;
             }
             
-            const path = basePath + '/' + file;
+            const path = basePath + '/' + file.name;
             item.connect('activate', () => {
                 try {
                     GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(path)}`);
