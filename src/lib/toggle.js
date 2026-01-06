@@ -113,6 +113,11 @@ export const DiskToggle = GObject.registerClass({
      */
     _startMonitoring() {
         this._monitor = new YDStatusMonitor(this._parser, '');
+        
+        // Передаем настройки в монитор
+        const settings = this.extension.getSettings();
+        this._monitor.setSettings(settings);
+        
         this._monitor.connectStatusChanged((status) => {
             if (!this._monitor._logPath && status.folder) {
                 this._monitor._logPath = GLib.build_filenamev([status.folder, '.sync', 'cli.log']);
@@ -147,7 +152,12 @@ export const DiskToggle = GObject.registerClass({
 
         this.emit('status-changed', current);
 
-        if ((this._lastStatus === 'busy' || this._lastStatus === 'index') && current === 'idle') {
+        const settings = this.extension.getSettings();
+        const showNotification = settings.get_boolean("show-sync-complete-notification");
+        
+        if (showNotification && 
+            (this._lastStatus === 'busy' || this._lastStatus === 'index') && 
+            current === 'idle') {
             this.notification.newMessage(_('Синхронизация завершена'));
         }
         this._lastStatus = this._status;

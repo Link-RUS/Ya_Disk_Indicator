@@ -4,5 +4,6 @@
   "shell-version": ["49"],
   "url": "",
   "uuid": "Ya_Disk_Indicator@pingvin",
-  "version": 3
+  "version": 4,
+  "settings-schema": "org.gnome.shell.extensions.ya-disk-indicator"
 }

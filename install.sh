@@ -11,6 +11,7 @@ gnome-extensions pack ./build \
     --extra-source=icons \
     --podir=po \
     --force \
+    --schema=schemas/org.gnome.shell.extensions.ya-disk-indicator.gschema.xml
 
 if [ $? -ne 0 ]; then 
     echo "Error occur during compilation of Gnome Extension ${EXT_NAME}."

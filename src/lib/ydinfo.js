@@ -132,6 +132,15 @@ export const YDStatusMonitor = class {
         this._timeoutId = 0;
         this._onStatusChanged = null;
         this._currentPollInterval = 60; // по умолчанию — раз в минуту
+        this._settings = null;
+    }
+    
+    /**
+     * Устанавливает настройки расширения
+     * @param {Gio.Settings} settings - Настройки расширения
+     */
+    setSettings(settings) {
+        this._settings = settings;
     }
 
     /**
@@ -204,20 +213,35 @@ export const YDStatusMonitor = class {
                     this._startLogMonitoring(); // перезапускаем монитор с новым путём
                 }
 
+                // Определяем интервал из настроек или используем значения по умолчанию
+                let normalInterval = 60;
+                let busyInterval = 1;
+                let fallbackInterval = 60;
+                
+                if (this._settings) {
+                    normalInterval = this._settings.get_int("refresh-timer");
+                    busyInterval = this._settings.get_int("busy-refresh-timer");
+                    fallbackInterval = this._settings.get_int("fallback-refresh-timer");
+                }
+
                 // Определяем интервал
                 const isBusy = status.status === 'busy' || status.status === 'index';
-                this._currentPollInterval = isBusy ? 1 : 60;
+                this._currentPollInterval = isBusy ? busyInterval : normalInterval;
 
                 if (this._onStatusChanged) {
                     this._onStatusChanged(status);
                 }
             } else {
                 console.error('Failed to get Yandex.Disk status:', new TextDecoder().decode(stderr));
-                this._currentPollInterval = 60; // fallback
+                // Используем интервал из настроек или значение по умолчанию
+                this._currentPollInterval = this._settings ? 
+                    this._settings.get_int("fallback-refresh-timer") : 60;
             }
         } catch (e) {
             console.error('Exception while getting Yandex.Disk status:', e);
-            this._currentPollInterval = 60; // fallback
+            // Используем интервал из настроек или значение по умолчанию
+            this._currentPollInterval = this._settings ? 
+                this._settings.get_int("fallback-refresh-timer") : 60;
         }
 
         // 🔁 Устанавливаем следующий таймер с актуальным интервалом

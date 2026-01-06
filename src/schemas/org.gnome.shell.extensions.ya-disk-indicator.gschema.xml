@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema id="org.gnome.shell.extensions.ya-disk-indicator" 
+           path="/org/gnome/shell/extensions/ya-disk-indicator/">
+    
+    <key name="refresh-timer" type="i">
+      <default>60</default>
+      <summary>Refresh timer</summary>
+      <description>Time in seconds between status updates</description>
+    </key>
+    
+    <key name="busy-refresh-timer" type="i">
+      <default>1</default>
+      <summary>Busy refresh timer</summary>
+      <description>Time in seconds between status updates when Yandex.Disk is busy</description>
+    </key>
+    
+    <key name="fallback-refresh-timer" type="i">
+      <default>60</default>
+      <summary>Fallback refresh timer</summary>
+      <description>Time in seconds between status updates when fallback is used</description>
+    </key>
+    
+    <key name="show-sync-complete-notification" type="b">
+      <default>true</default>
+      <summary>Show sync complete notification</summary>
+      <description>Show notification when synchronization is complete</description>
+    </key>
+    
+  </schema>
+</schemalist>
