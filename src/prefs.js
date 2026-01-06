@@ -1,4 +1,4 @@
-import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import { ExtensionPreferences, gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import Adw from "gi://Adw";
 import Gtk from "gi://Gtk";
 
@@ -9,14 +9,14 @@ export default class YandexDiskIndicatorPreferences extends ExtensionPreferences
         const page = new Adw.PreferencesPage();
         
         const group = new Adw.PreferencesGroup({
-            title: "Настройки Yandex Disk Indicator"
+            title: _("Настройки Yandex Disk Indicator")
         });
         page.add(group);
         
         // Создаем строку настроек для обычного таймера
         const row1 = new Adw.SpinRow({
-            title: "Таймер обновления (секунды)",
-            subtitle: "Интервал обновления в обычном режиме",
+            title: _("Таймер обновления (секунды)"),
+            subtitle: _("Интервал обновления в обычном режиме"),
             adjustment: new Gtk.Adjustment({
                 lower: 5,
                 upper: 3600,
@@ -37,8 +37,8 @@ export default class YandexDiskIndicatorPreferences extends ExtensionPreferences
         
         // Создаем строку настроек для таймера в режиме синхронизации
         const row2 = new Adw.SpinRow({
-            title: "Таймер обновления в режиме синхронизации (секунды)",
-            subtitle: "Интервал обновления при активной синхронизации",
+            title: _("Таймер обновления в режиме синхронизации (секунды)"),
+            subtitle: _("Интервал обновления при активной синхронизации"),
             adjustment: new Gtk.Adjustment({
                 lower: 1,
                 upper: 30,
@@ -59,8 +59,8 @@ export default class YandexDiskIndicatorPreferences extends ExtensionPreferences
         
         // Создаем строку настроек для таймера в режиме fallback
         const row3 = new Adw.SpinRow({
-            title: "Таймер обновления в режиме fallback (секунды)",
-            subtitle: "Интервал обновления при ошибках",
+            title: _("Таймер обновления в режиме fallback (секунды)"),
+            subtitle: _("Интервал обновления при ошибках"),
             adjustment: new Gtk.Adjustment({
                 lower: 5,
                 upper: 3600,
@@ -81,8 +81,8 @@ export default class YandexDiskIndicatorPreferences extends ExtensionPreferences
         
         // Создаем переключатель для настройки уведомлений
         const row4 = new Adw.SwitchRow({
-            title: "Показывать уведомление о завершении синхронизации",
-            subtitle: "Отображать уведомление при завершении синхронизации",
+            title: _("Показывать уведомление о завершении синхронизации"),
+            subtitle: _("Отображать уведомление при завершении синхронизации"),
             active: settings.get_boolean("show-sync-complete-notification")
         });
         

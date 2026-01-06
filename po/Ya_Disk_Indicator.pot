@@ -108,3 +108,39 @@ msgstr ""
 #: src/lib/toggle.js:257
 msgid "Каталог Яндекс.Диска не найден"
 msgstr ""
+
+#: src/prefs.js:12
+msgid "Настройки Yandex Disk Indicator"
+msgstr ""
+
+#: src/prefs.js:19
+msgid "Таймер обновления (секунды)"
+msgstr ""
+
+#: src/prefs.js:20
+msgid "Интервал обновления в обычном режиме"
+msgstr ""
+
+#: src/prefs.js:40
+msgid "Таймер обновления в режиме синхронизации (секунды)"
+msgstr ""
+
+#: src/prefs.js:41
+msgid "Интервал обновления при активной синхронизации"
+msgstr ""
+
+#: src/prefs.js:62
+msgid "Таймер обновления в режиме fallback (секунды)"
+msgstr ""
+
+#: src/prefs.js:63
+msgid "Интервал обновления при ошибках"
+msgstr ""
+
+#: src/prefs.js:84
+msgid "Показывать уведомление о завершении синхронизации"
+msgstr ""
+
+#: src/prefs.js:85
+msgid "Отображать уведомление при завершении синхронизации"
+msgstr ""

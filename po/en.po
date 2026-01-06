@@ -108,3 +108,39 @@ msgstr "Failed to open Yandex.Disk folder"
 #: src/lib/toggle.js:257
 msgid "Каталог Яндекс.Диска не найден"
 msgstr "Yandex.Disk folder not found"
+
+#: src/prefs.js:12
+msgid "Настройки Yandex Disk Indicator"
+msgstr "Yandex Disk Indicator Settings"
+
+#: src/prefs.js:19
+msgid "Таймер обновления (секунды)"
+msgstr "Refresh Timer (seconds)"
+
+#: src/prefs.js:20
+msgid "Интервал обновления в обычном режиме"
+msgstr "Refresh interval in normal mode"
+
+#: src/prefs.js:40
+msgid "Таймер обновления в режиме синхронизации (секунды)"
+msgstr "Sync Mode Refresh Timer (seconds)"
+
+#: src/prefs.js:41
+msgid "Интервал обновления при активной синхронизации"
+msgstr "Refresh interval during active synchronization"
+
+#: src/prefs.js:62
+msgid "Таймер обновления в режиме fallback (секунды)"
+msgstr "Fallback Mode Refresh Timer (seconds)"
+
+#: src/prefs.js:63
+msgid "Интервал обновления при ошибках"
+msgstr "Refresh interval during errors"
+
+#: src/prefs.js:84
+msgid "Показывать уведомление о завершении синхронизации"
+msgstr "Show Sync Complete Notification"
+
+#: src/prefs.js:85
+msgid "Отображать уведомление при завершении синхронизации"
+msgstr "Display notification when synchronization completes"
