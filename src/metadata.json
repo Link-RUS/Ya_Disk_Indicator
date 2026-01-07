@@ -2,8 +2,11 @@
   "description": "Shows Yandex.Disk synchronization status",
   "name": "Ya_Disk_Indicator",
   "shell-version": ["49"],
-  "url": "",
+  "url": "https://github.com/Link-RUS/Ya_Disk_Indicator",
   "uuid": "Ya_Disk_Indicator@pingvin",
   "version": 4,
-  "settings-schema": "org.gnome.shell.extensions.ya-disk-indicator"
+  "settings-schema": "org.gnome.shell.extensions.ya-disk-indicator",
+  "donations": {
+    "bitcoin": "bc1q4vdgsqcaf4zqc5f649j8tj549r49vl7j3vhkk8"
+  }
 }
