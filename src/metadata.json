@@ -4,7 +4,7 @@
   "shell-version": ["49"],
   "url": "https://github.com/Link-RUS/Ya_Disk_Indicator",
   "uuid": "Ya_Disk_Indicator@pingvin",
-  "version": 4,
+  "version": 5,
   "settings-schema": "org.gnome.shell.extensions.ya-disk-indicator",
   "donations": {
     "custom": "https://app.tonkeeper.com/transfer/UQCg3FbUCl-GGVqy0tT6m0ogQFEn7Xpi04wo5IlDtqy-Za3f"

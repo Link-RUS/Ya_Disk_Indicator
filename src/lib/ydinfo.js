@@ -198,61 +198,68 @@ export const YDStatusMonitor = class {
             this._timeoutId = 0;
         }
 
-        try {         
-            const [success, stdout, stderr, exitCode] = GLib.spawn_command_line_sync(
-                `sh -c "${STATUS_CMD}"`
-            );
-
-            if (success) {
-                const output = new TextDecoder().decode(stdout);
-                const status = this._parser.parse(output);
-
-                // Сохраняем путь к папке, если ещё не знаем
-                if (!this._logPath && status.folder) {
-                    this._logPath = GLib.build_filenamev([status.folder, '.sync', 'cli.log']);
-                    this._startLogMonitoring(); // перезапускаем монитор с новым путём
-                }
-
-                // Определяем интервал из настроек или используем значения по умолчанию
-                let normalInterval = 60;
-                let busyInterval = 1;
-                let fallbackInterval = 60;
+        // Используем асинхронный подход вместо синхронного spawn
+        const proc = Gio.Subprocess.new(
+            ['sh', '-c', STATUS_CMD],
+            Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+        );
+        
+        // Асинхронно получаем результат
+        proc.communicate_utf8_async(null, null, (proc, res) => {
+            try {
+                const [, stdout, stderr] = proc.communicate_utf8_finish(res);
+                const success = proc.get_successful();
                 
-                if (this._settings) {
-                    normalInterval = this._settings.get_int("refresh-timer");
-                    busyInterval = this._settings.get_int("busy-refresh-timer");
-                    fallbackInterval = this._settings.get_int("fallback-refresh-timer");
+                if (success) {
+                    const status = this._parser.parse(stdout);
+                    
+                    // Сохраняем путь к папке, если ещё не знаем
+                    if (!this._logPath && status.folder) {
+                        this._logPath = GLib.build_filenamev([status.folder, '.sync', 'cli.log']);
+                        this._startLogMonitoring(); // перезапускаем монитор с новым путём
+                    }
+                    
+                    // Определяем интервал из настроек или используем значения по умолчанию
+                    let normalInterval = 60;
+                    let busyInterval = 1;
+                    let fallbackInterval = 60;
+                    
+                    if (this._settings) {
+                        normalInterval = this._settings.get_int("refresh-timer");
+                        busyInterval = this._settings.get_int("busy-refresh-timer");
+                        fallbackInterval = this._settings.get_int("fallback-refresh-timer");
+                    }
+                    
+                    // Определяем интервал
+                    const isBusy = status.status === 'busy' || status.status === 'index';
+                    this._currentPollInterval = isBusy ? busyInterval : normalInterval;
+                    
+                    if (this._onStatusChanged) {
+                        this._onStatusChanged(status);
+                    }
+                } else {
+                    console.error('Failed to get Yandex.Disk status:', stderr);
+                    // Используем интервал из настроек или значение по умолчанию
+                    this._currentPollInterval = this._settings ?
+                        this._settings.get_int("fallback-refresh-timer") : 60;
                 }
-
-                // Определяем интервал
-                const isBusy = status.status === 'busy' || status.status === 'index';
-                this._currentPollInterval = isBusy ? busyInterval : normalInterval;
-
-                if (this._onStatusChanged) {
-                    this._onStatusChanged(status);
-                }
-            } else {
-                console.error('Failed to get Yandex.Disk status:', new TextDecoder().decode(stderr));
+            } catch (e) {
+                console.error('Exception while getting Yandex.Disk status:', e);
                 // Используем интервал из настроек или значение по умолчанию
-                this._currentPollInterval = this._settings ? 
+                this._currentPollInterval = this._settings ?
                     this._settings.get_int("fallback-refresh-timer") : 60;
             }
-        } catch (e) {
-            console.error('Exception while getting Yandex.Disk status:', e);
-            // Используем интервал из настроек или значение по умолчанию
-            this._currentPollInterval = this._settings ? 
-                this._settings.get_int("fallback-refresh-timer") : 60;
-        }
-
-        // 🔁 Устанавливаем следующий таймер с актуальным интервалом
-        this._timeoutId = GLib.timeout_add_seconds(
-            GLib.PRIORITY_DEFAULT,
-            this._currentPollInterval,
-            () => {
-                this._pollStatus();
-                return false; // будет установлен заново
-            }
-        );
+            
+            // 🔁 Устанавливаем следующий таймер с актуальным интервалом
+            this._timeoutId = GLib.timeout_add_seconds(
+                GLib.PRIORITY_DEFAULT,
+                this._currentPollInterval,
+                () => {
+                    this._pollStatus();
+                    return false; // будет установлен заново
+                }
+            );
+        }); 
     }
 
     /**

@@ -95,8 +95,8 @@ export const DiskToggle = GObject.registerClass({
 
     _isYDInstalled() {
         try {
-            const [success, stdout, stderr, exitCode] = GLib.spawn_command_line_sync('sh -c "command -v yandex-disk"');
-            if (!success || exitCode !== 0) {
+            const path = GLib.find_program_in_path("yandex-disk");
+            if (!path) {
                 console.warn('Yandex.Disk is not installed or not in PATH');
                 return false;
             }
@@ -218,7 +218,9 @@ export const DiskToggle = GObject.registerClass({
             const path = basePath + '/' + file.name;
             item.connect('activate', () => {
                 try {
-                    GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(path)}`);
+                    const file = Gio.File.new_for_path(path);
+                    const uri = file.get_uri();
+                    Gio.AppInfo.launch_default_for_uri(uri, null);
                 } catch (e) {
                     console.error(`Failed to open file ${path}:`, e);
                     this.notification.newMessage(_('Не удалось открыть файл'));
@@ -247,7 +249,7 @@ export const DiskToggle = GObject.registerClass({
 
     openBrowser() {
         try {
-            GLib.spawn_command_line_async('xdg-open https://disk.yandex.ru');
+            Gio.AppInfo.launch_default_for_uri('https://disk.yandex.ru', null);
         } catch (e) {
             console.error('Failed to open Yandex.Disk in browser:', e);
             this.notification.newMessage(_('Не удалось открыть Яндекс.Диск в браузере'));
@@ -258,7 +260,9 @@ export const DiskToggle = GObject.registerClass({
         const folder = this._monitor?._logPath?.replace('/.sync/cli.log', '');
         if (folder) {
             try {
-                GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(folder)}`);
+                const file = Gio.File.new_for_path(folder);
+                const uri = file.get_uri();
+                Gio.AppInfo.launch_default_for_uri(uri, null);
             } catch (e) {
                 console.error(`Failed to open folder ${folder}:`, e);
                 this.notification.newMessage(_('Не удалось открыть каталог Яндекс.Диска'));
