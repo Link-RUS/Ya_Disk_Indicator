@@ -209,8 +209,10 @@ export const YDStatusMonitor = class {
             try {
                 const [, stdout, stderr] = proc.communicate_utf8_finish(res);
                 const success = proc.get_successful();
+                const exitStatus = proc.get_exit_status();
                 
-                if (success) {
+                // Выполняем обработку статуса даже при exit code 1
+                if (success || exitStatus === 1) {
                     const status = this._parser.parse(stdout);
                     
                     // Сохраняем путь к папке, если ещё не знаем
@@ -238,13 +240,19 @@ export const YDStatusMonitor = class {
                         this._onStatusChanged(status);
                     }
                 } else {
-                    console.error('Failed to get Yandex.Disk status:', stderr);
+                    console.error('Failed to get Yandex.Disk status');
+                    console.error('Command:', STATUS_CMD);
+                    console.error('Exit code:', exitStatus);
+                    console.error('Stderr:', stderr);
+                    console.error('Stdout:', stdout);
                     // Используем интервал из настроек или значение по умолчанию
                     this._currentPollInterval = this._settings ?
                         this._settings.get_int("fallback-refresh-timer") : 60;
                 }
             } catch (e) {
-                console.error('Exception while getting Yandex.Disk status:', e);
+                console.error('Exception while getting Yandex.Disk status');
+                console.error('Command:', STATUS_CMD);
+                console.error('Error:', e);
                 // Используем интервал из настроек или значение по умолчанию
                 this._currentPollInterval = this._settings ?
                     this._settings.get_int("fallback-refresh-timer") : 60;
