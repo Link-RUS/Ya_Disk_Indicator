@@ -186,8 +186,22 @@ export const DiskToggle = GObject.registerClass({
 
     _toggleSync() {
         const isRunning = this.checked;
+        const isPaused = this._status === 'paused';
+
         try {
-            this._daemon[isRunning ? 'stop' : 'start']();
+            if (isPaused) {
+                this._daemon.stop();
+                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+                    try {
+                        this._daemon.start();
+                    } catch (e) {
+                        console.error('Failed to start Yandex.Disk after pause:', e);
+                    }
+                    return GLib.SOURCE_REMOVE;
+                });
+            } else {
+                this._daemon[isRunning ? 'stop' : 'start']();
+            }
         } catch (e) {
             console.error(`Failed to ${isRunning ? 'stop' : 'start'} Yandex.Disk:`, e);
             this.notification.newMessage(_('Ошибка при управлении Яндекс.Диском'));
